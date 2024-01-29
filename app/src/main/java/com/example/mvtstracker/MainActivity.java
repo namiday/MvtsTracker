@@ -19,6 +19,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.util.Log;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.Socket;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
     private static final String TAG = "MainActivity";
@@ -34,6 +37,35 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float[] lastGyro = new float[3];
     private boolean shakeDetected = false;
 
+    private String dstAddress;
+    private int dstPort;
+
+    public MainActivity(String addr, int port) {
+        dstAddress = addr;
+        dstPort = port;
+    }
+
+    @Override
+    protected Void doInBackground(Void... arg0) {
+        Socket socket = null;
+        try {
+            socket = new Socket(dstAddress, dstPort);
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            out.println("Hello from Android");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return null;
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
