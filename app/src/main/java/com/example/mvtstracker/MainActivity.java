@@ -13,21 +13,19 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.appcompat.app.AppCompatActivity;
-import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.util.Log;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import android.os.AsyncTask;
+
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
     private static final String TAG = "MainActivity";
     private LocationManager locationManager;
     private TextView locationText;
-    private Button updateButton;
     private int updateCount = 0; // Counter for location updates
 
     private SensorManager sensorManager;
@@ -37,40 +35,26 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float[] lastGyro = new float[3];
     private boolean shakeDetected = false;
 
-    private String dstAddress;
-    private int dstPort;
+    private String dstAddress="0.0.0.0";
+    private int dstPort=8052;
 
-    public MainActivity(String addr, int port) {
-        dstAddress = addr;
-        dstPort = port;
+
+
+    private void sendHelloToUnityServer() {
+        SendHttpPostRequest postRequest = new SendHttpPostRequest();
+        Log.d(TAG, "sendHelloToUnityServer begin");
+
+        postRequest.sendPost();
     }
 
-    @Override
-    protected Void doInBackground(Void... arg0) {
-        Socket socket = null;
-        try {
-            socket = new Socket(dstAddress, dstPort);
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            out.println("Hello from Android");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (socket != null) {
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return null;
-    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //new NetworkTask("0.0.0.0", 8052).execute();
+
+        sendHelloToUnityServer();
 
         locationText = findViewById(R.id.location_text);
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -97,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 101);
         }
+
     }
 
     @Override
@@ -146,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, locationListener);
 
             // Additionally, request update from network provider as a fallback
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 2000, 0, locationListener);
         } catch (SecurityException e) {
             Log.e(TAG, "Permission issue: " + e.getMessage());
         }
@@ -171,3 +156,5 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 }
+
+
